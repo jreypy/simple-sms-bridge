@@ -47,80 +47,87 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
                 // Read SMS
-                try {
-                    List<String> listPermissionsNeeded = new ArrayList<>();
-                    final boolean send = ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED;
-                    final boolean receive = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED;
-                    final boolean internet = ContextCompat.checkSelfPermission(activity, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED;
-                    if (send || receive || internet) {
-                        if (receive) {
-                            listPermissionsNeeded.add(Manifest.permission.READ_SMS);
-                        }
-                        if (send) {
-                            listPermissionsNeeded.add(Manifest.permission.SEND_SMS);
-                        }
-                        if (internet){
-                            listPermissionsNeeded.add(Manifest.permission.INTERNET);
-                        }
-                        Snackbar.make(view, "Request SMS Permision", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                        ActivityCompat.requestPermissions(activity, listPermissionsNeeded.toArray(new
-                                String[listPermissionsNeeded.size()]), REQUEST_ID_MULTIPLE_PERMISSIONS);
-                    } else {
-                        Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-                        if (cursor.moveToFirst()) { // must check the result to prevent exception
-                            String msgData = "";
-                            do {
-
-                                String body = "";
-                                String id = "";
-                                String address = "";
-                                for (int idx = 0; idx < cursor.getColumnCount(); idx++) {
-                                    if (cursor.getColumnName(idx).equalsIgnoreCase("body")) {
-                                        body = cursor.getString(idx).replaceAll("\\s+", "");
-                                    } else if (cursor.getColumnName(idx).equalsIgnoreCase("_id")) {
-                                        id = cursor.getString(idx);
-                                    } else if (cursor.getColumnName(idx).equalsIgnoreCase("address")) {
-                                        address = cursor.getString(idx);
-                                    }
-                                }
-                                if (body.toLowerCase().indexOf("ayuda") >= 0) {
-                                    msgData += address + " " + body + ";";
-                                }
-                                // TODO Execute Http and Get SMS Response Message
-                                String response = request("http://ayuda.net:8080/ayuda.do");
-                                SmsManager smsManager = SmsManager.getDefault();
-                                smsManager.sendTextMessage(address, null, "En breve recibirá un instructivo [" + response + "]", null, null);
-                                Toast.makeText(getApplicationContext(), "SMS sent. to [" + address + "][" + response + "]",
-                                        Toast.LENGTH_LONG).show();
-                                // use msgData
-                            } while (cursor.moveToNext());
-                            Snackbar.make(view, "SMS: " + msgData, Snackbar.LENGTH_LONG)
-                                    .setAction("Action", null).show();
-
-
-                        } else {
-                            Snackbar.make(view, "SMS: " + "Empty", Snackbar.LENGTH_LONG)
-                                    .setAction("Action", null).show();
-                            // empty box, no SMS
-
-                        }
-                    }
-
-                } catch (Exception e) {
-                    Snackbar.make(view, "SMS Error: " + e.getMessage(), Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
-                }
-
-
+                // TODO Change to Task
+                checkSMSs(activity, view);
             }
         });
     }
 
+    private void checkSMSs(Activity activity, View view) {
+        try {
+            List<String> listPermissionsNeeded = new ArrayList<>();
+            final boolean send = ContextCompat.checkSelfPermission(activity, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED;
+            final boolean receive = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED;
+            final boolean internet = ContextCompat.checkSelfPermission(activity, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED;
+            if (send || receive || internet) {
+                if (receive) {
+                    listPermissionsNeeded.add(Manifest.permission.READ_SMS);
+                }
+                if (send) {
+                    listPermissionsNeeded.add(Manifest.permission.SEND_SMS);
+                }
+                if (internet) {
+                    listPermissionsNeeded.add(Manifest.permission.INTERNET);
+                }
+                Snackbar.make(view, "Request SMS Permision", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                ActivityCompat.requestPermissions(activity, listPermissionsNeeded.toArray(new
+                        String[listPermissionsNeeded.size()]), REQUEST_ID_MULTIPLE_PERMISSIONS);
+            } else {
+                Cursor cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+                if (cursor.moveToFirst()) { // must check the result to prevent exception
+                    String msgData = "";
+                    do {
+
+                        String body = "";
+                        String id = "";
+                        String address = "";
+                        for (int idx = 0; idx < cursor.getColumnCount(); idx++) {
+                            if (cursor.getColumnName(idx).equalsIgnoreCase("body")) {
+                                body = cursor.getString(idx).replaceAll("\\s+", "");
+                            } else if (cursor.getColumnName(idx).equalsIgnoreCase("_id")) {
+                                id = cursor.getString(idx);
+                            } else if (cursor.getColumnName(idx).equalsIgnoreCase("address")) {
+                                address = cursor.getString(idx);
+                            }
+                        }
+                        if (body.toLowerCase().indexOf("ayuda") >= 0) {
+                            msgData += address + " " + body + ";";
+                        }
+                        // TODO Execute Http and Get SMS Response Message
+                        String response = request("http://ayuda.net:8080/ayuda.do");
+                        SmsManager smsManager = SmsManager.getDefault();
+                        smsManager.sendTextMessage(address, null, "En breve recibirá un instructivo [" + response + "]", null, null);
+                        Toast.makeText(getApplicationContext(), "SMS sent. to [" + address + "][" + response + "]",
+                                Toast.LENGTH_LONG).show();
+                        // use msgData
+                    } while (cursor.moveToNext());
+                    Snackbar.make(view, "SMS: " + msgData, Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+
+
+                } else {
+                    Snackbar.make(view, "SMS: " + "Empty", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    // empty box, no SMS
+
+                }
+            }
+
+        } catch (Exception e) {
+            Snackbar.make(view, "SMS Error: " + e.getMessage(), Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
+    }
+
+    private void deleteInbox() {
+        // TODO
+        // https://stackoverflow.com/questions/8614211/deleting-android-sms-programmatically
+    }
+
     public String request(String to) throws IOException {
+        // TODO Fix Permission Exception
         URL url = new URL(to);
         URLConnection uc = url.openConnection();
         //String j = (String) uc.getContent();
